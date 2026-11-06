@@ -73,8 +73,10 @@ export default function History() {
                           : item.input?.product && item.input?.location
                             ? `${item.input.product} · ${item.input.location} · `
                           : ''}
-                        {item.input?.horizon_months
-                          ? `${item.input.horizon_months} tháng · `
+                        {item.input?.horizon_days
+                          ? `${item.input.horizon_days} ngày · `
+                          : item.input?.horizon_months
+                            ? `${item.input.horizon_months} tháng · `
                           : ''}
                         {Array.isArray(item.predictions) ? item.predictions.length : 0} mốc giá
                       </p>

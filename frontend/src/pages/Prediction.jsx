@@ -12,7 +12,7 @@ export default function Prediction() {
         <p className="eyebrow">Dự báo giá lúa</p>
         <h1 className="page-title">Tạo dự đoán</h1>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-          Chọn sản phẩm, khu vực, mô hình và khoảng thời gian để dự báo giá theo tháng. Kết quả được lưu vào lịch sử tài khoản.
+          Chọn sản phẩm, khu vực, mô hình và số ngày cần dự báo. Kết quả được lưu vào lịch sử tài khoản.
         </p>
       </section>
       <PredictionForm onComplete={setResult} />

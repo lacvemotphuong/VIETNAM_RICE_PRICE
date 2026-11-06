@@ -12,11 +12,21 @@ async function listOptions(_req, res) {
 
 async function createPrediction(req, res) {
   const model = String(req.body?.model || '').toLowerCase();
-  if (!['ann', 'lstm', 'sarimax', 'xgboost'].includes(model)) {
-    throw Object.assign(new Error('Choose a supported model: ann, lstm, sarimax or xgboost.'), { status: 400 });
+  if (!['random_forest', 'xgboost'].includes(model)) {
+    throw Object.assign(new Error('Choose a supported model: random_forest or xgboost.'), { status: 400 });
+  }
+  const product = String(req.body?.product || '').trim();
+  const location = String(req.body?.location || '').trim();
+  if (!product || !location) {
+    throw Object.assign(new Error('Product and location are required.'), { status: 400 });
   }
   const { model: _model, ...payload } = req.body;
-  const result = await predictionService.predict({ ...payload, model });
+  const result = await predictionService.predict({
+    ...payload,
+    model,
+    product,
+    location,
+  });
   const saved = await Prediction.create({
     user: req.user.id,
     model: result.model,

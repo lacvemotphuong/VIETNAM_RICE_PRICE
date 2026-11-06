@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const predictionSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-    model: { type: String, enum: ['ann', 'lstm', 'sarimax', 'xgboost'], required: true },
+    model: { type: String, enum: ['ann', 'lstm', 'sarimax', 'random_forest', 'xgboost'], required: true },
     input: { type: mongoose.Schema.Types.Mixed, required: true },
     predictions: { type: [Number], required: true, validate: (values) => values.length > 0 },
     actualHistory: {

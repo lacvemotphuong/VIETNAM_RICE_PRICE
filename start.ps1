@@ -95,7 +95,7 @@ CLIENT_ORIGIN=http://localhost:5173
 
 $previousErrorActionPreference = $ErrorActionPreference
 $ErrorActionPreference = 'Continue'
-$pythonImports = & $pythonPath -c 'import fastapi, uvicorn, numpy, tensorflow, xgboost, statsmodels, joblib' 2>&1
+$pythonImports = & $pythonPath -c 'import fastapi, uvicorn, numpy, pandas, sklearn, xgboost, joblib' 2>&1
 $pythonImportExitCode = $LASTEXITCODE
 $ErrorActionPreference = $previousErrorActionPreference
 if ($pythonImportExitCode -ne 0) {
@@ -160,7 +160,21 @@ $backendCommand = 'npm.cmd run dev'
 $frontendCommand = 'npm.cmd run dev -- --host 127.0.0.1'
 
 Start-ServiceWindow -Title 'Rice Price - FastAPI' -WorkingDirectory $backendPath -Command $aiCommand
-Start-Sleep -Seconds 2
+$aiReady = $false
+for ($attempt = 0; $attempt -lt 60; $attempt++) {
+    try {
+        $null = Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:8000/health' -TimeoutSec 3
+        $aiReady = $true
+        break
+    }
+    catch {
+        Start-Sleep -Seconds 2
+    }
+}
+if (-not $aiReady) {
+    Stop-WithMessage 'FastAPI khong san sang tai http://127.0.0.1:8000/health sau 120 giay. Kiem tra cua so FastAPI truoc khi thu lai.'
+}
+
 Start-ServiceWindow -Title 'Rice Price - Express API' -WorkingDirectory $backendPath -Command $backendCommand
 Start-Sleep -Seconds 1
 Start-ServiceWindow -Title 'Rice Price - React Vite' -WorkingDirectory $frontendPath -Command $frontendCommand

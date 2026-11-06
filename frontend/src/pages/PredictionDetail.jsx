@@ -56,7 +56,7 @@ export default function PredictionDetail() {
 
       <PredictionResult prediction={prediction} />
 
-      {(prediction.input?.target || prediction.input?.product || prediction.input?.location || prediction.input?.horizon_months) && (
+      {(prediction.input?.target || prediction.input?.product || prediction.input?.location || prediction.input?.horizon_days || prediction.input?.horizon_months) && (
         <section className="panel">
           <p className="eyebrow">Thông tin dự báo</p>
           <h2 className="mt-1 text-lg font-bold text-slate-900">Lựa chọn của bạn</h2>
@@ -83,6 +83,12 @@ export default function PredictionDetail() {
               <div className="rounded-xl bg-slate-50 p-4">
                 <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">Thời gian dự báo</dt>
                 <dd className="mt-2 text-sm font-medium text-slate-800">{prediction.input.horizon_months} tháng</dd>
+              </div>
+            )}
+            {prediction.input.horizon_days && (
+              <div className="rounded-xl bg-slate-50 p-4">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">Thời gian dự báo</dt>
+                <dd className="mt-2 text-sm font-medium text-slate-800">{prediction.input.horizon_days} ngày</dd>
               </div>
             )}
           </dl>

@@ -1,17 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getApiError, predictionsApi } from '../api';
 
-const modelOrder = ['lstm', 'xgboost', 'sarimax', 'ann'];
-const modelLabels = { lstm: 'LSTM', xgboost: 'XGBoost', sarimax: 'SARIMAX', ann: 'ANN' };
+const modelOrder = ['random_forest', 'xgboost'];
+const modelLabels = { random_forest: 'Random Forest', xgboost: 'XGBoost' };
 const modelDescriptions = {
-  lstm: 'Dựa trên lịch sử giá của sản phẩm và khu vực bạn chọn.',
+  random_forest: 'Dựa trên dữ liệu giá lịch sử của sản phẩm và khu vực bạn chọn.',
   xgboost: 'Dựa trên lịch sử giá của sản phẩm và khu vực bạn chọn.',
-  sarimax: 'Dựa trên lịch sử giá của sản phẩm và khu vực bạn chọn.',
-  ann: 'Dựa trên lịch sử giá của sản phẩm và khu vực bạn chọn.',
 };
 
 function getSeriesHorizons(series, model) {
-  return series?.horizons_months_by_model?.[model] || series?.horizons_months || [];
+  return series?.horizons_days_by_model?.[model] || series?.horizons_days || [];
 }
 
 function SectionIcon({ type }) {
@@ -41,7 +39,7 @@ export default function PredictionForm({ onComplete }) {
   const [selected, setSelected] = useState('');
   const [product, setProduct] = useState('');
   const [location, setLocation] = useState('');
-  const [horizonMonths, setHorizonMonths] = useState(1);
+  const [horizonDays, setHorizonDays] = useState(1);
   const [loadingModels, setLoadingModels] = useState(true);
   const [loadingOptions, setLoadingOptions] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -95,10 +93,10 @@ export default function PredictionForm({ onComplete }) {
   }, [availableModels, selected]);
 
   useEffect(() => {
-    if (horizons.length && !horizons.includes(horizonMonths)) {
-      setHorizonMonths(horizons[0]);
+    if (horizons.length && !horizons.includes(horizonDays)) {
+      setHorizonDays(horizons[0]);
     }
-  }, [horizonMonths, horizons]);
+  }, [horizonDays, horizons]);
 
   function changeProduct(value) {
     setProduct(value);
@@ -106,8 +104,8 @@ export default function PredictionForm({ onComplete }) {
     const nextSeries = matchingSeries[0];
     setLocation(nextSeries?.location || '');
     const nextHorizons = getSeriesHorizons(nextSeries, selected);
-    if (!nextHorizons.includes(horizonMonths)) {
-      setHorizonMonths(nextHorizons[0] || 1);
+    if (!nextHorizons.includes(horizonDays)) {
+      setHorizonDays(nextHorizons[0] || 1);
     }
     setError('');
   }
@@ -116,8 +114,8 @@ export default function PredictionForm({ onComplete }) {
     setLocation(value);
     const nextSeries = locations.find((item) => item.location === value);
     const nextHorizons = getSeriesHorizons(nextSeries, selected);
-    if (!nextHorizons.includes(horizonMonths)) {
-      setHorizonMonths(nextHorizons[0] || 1);
+    if (!nextHorizons.includes(horizonDays)) {
+      setHorizonDays(nextHorizons[0] || 1);
     }
     setError('');
   }
@@ -137,7 +135,7 @@ export default function PredictionForm({ onComplete }) {
         model: selected,
         product,
         location,
-        horizon_months: horizonMonths,
+        horizon_days: horizonDays,
       });
       onComplete(data.prediction);
     } catch (requestError) {
@@ -162,7 +160,7 @@ export default function PredictionForm({ onComplete }) {
           <div>
             <h2 className="text-sm font-bold text-slate-900">Thông số dự đoán</h2>
             <p className="mt-0.5 text-xs text-slate-500">
-              Dữ liệu chuỗi tháng từ CSV · {targetUnit || 'đơn vị giá chưa cấu hình'}
+              Lịch sử giá đã lưu · {targetUnit || 'đơn vị giá chưa cấu hình'}
             </p>
           </div>
         </div>
@@ -196,39 +194,42 @@ export default function PredictionForm({ onComplete }) {
             </select>
             {selectedSeries && (
               <span className="mt-1 block text-xs text-slate-500">
-                Dữ liệu mới nhất: {selectedSeries.latest_month} · {selectedSeries.history_months} tháng có giá
+                Ngày dự báo gần nhất: {selectedSeries.forecast_anchor_date}
+                {' · '}CSV mới nhất: {selectedSeries.latest_csv_date}
+                {' · '}Chuỗi giá đến: {selectedSeries.series_latest_date}
+                {' · '}{selectedSeries.history_months} tháng có giá
               </span>
             )}
           </label>
         </div>
 
         <fieldset className="mt-5">
-          <legend className="field-label">Khoảng thời gian dự báo</legend>
+          <legend className="field-label">Số ngày dự báo</legend>
           <div className="grid grid-cols-3 gap-2">
-            {horizons.map((months) => (
+            {horizons.map((days) => (
               <label
                 className={`flex cursor-pointer flex-col items-center rounded-xl border px-3 py-3 text-center transition ${
-                  horizonMonths === months ? 'border-emerald-300 bg-emerald-50' : 'border-slate-200 bg-white hover:bg-slate-50'
+                  horizonDays === days ? 'border-emerald-300 bg-emerald-50' : 'border-slate-200 bg-white hover:bg-slate-50'
                 }`}
-                key={months}
+                key={days}
               >
                 <input
                   className="sr-only"
                   type="radio"
-                  name="horizon-months"
-                  value={months}
-                  checked={horizonMonths === months}
-                  onChange={() => setHorizonMonths(months)}
+                  name="horizon-days"
+                  value={days}
+                  checked={horizonDays === days}
+                  onChange={() => setHorizonDays(days)}
                 />
-                <span className="text-sm font-bold text-slate-800">{months} tháng</span>
+                <span className="text-sm font-bold text-slate-800">{days} ngày</span>
                 <span className="mt-0.5 text-[11px] text-slate-500">
-                  {months === 1 ? 'Bước dự báo tiếp theo' : `Dự báo đệ quy ${months} bước`}
+                  {days === 1 ? 'Ngày kế tiếp' : `Tới ${days} ngày kế tiếp`}
                 </span>
               </label>
             ))}
           </div>
           <p className="mt-2 text-xs leading-5 text-slate-500">
-            Dự báo bắt đầu từ tháng kế tiếp. Chỉ hiện kỳ hạn và mô hình có dữ liệu phù hợp cho lựa chọn này.
+            Dự báo tính từ ngày mai theo ngày hiện tại tại Việt Nam. Hệ thống ngoại suy tuần tự từ giá thực cuối cùng trong CSV; không tạo hay ghi thêm dữ liệu.
           </p>
         </fieldset>
       </section>
@@ -239,7 +240,7 @@ export default function PredictionForm({ onComplete }) {
             <SectionIcon type="model" />
             <div>
               <h2 className="text-sm font-bold text-slate-900">Chọn cách dự báo</h2>
-              <p className="mt-0.5 text-xs text-slate-500">{availableModels.length} / 4 mô hình phù hợp lựa chọn này</p>
+              <p className="mt-0.5 text-xs text-slate-500">{availableModels.length} / 2 mô hình phù hợp lựa chọn này</p>
             </div>
           </div>
           <span className="hidden text-[10px] font-semibold text-slate-400 sm:block">Chọn phương án phù hợp</span>
@@ -268,8 +269,8 @@ export default function PredictionForm({ onComplete }) {
                   onChange={() => {
                     setSelected(name);
                     const modelHorizons = getSeriesHorizons(selectedSeries, name);
-                    if (!modelHorizons.includes(horizonMonths)) {
-                      setHorizonMonths(modelHorizons[0] || 1);
+                    if (!modelHorizons.includes(horizonDays)) {
+                      setHorizonDays(modelHorizons[0] || 1);
                     }
                     setError('');
                   }}
@@ -301,7 +302,7 @@ export default function PredictionForm({ onComplete }) {
           type="submit"
           disabled={submitting || !selectedModelReady || !unitConfigured || !selectedSeries || Boolean(optionsError)}
         >
-          {submitting ? 'Đang tính toán...' : '▶  Thực hiện dự đoán ngay'}
+          {submitting ? 'Đang ngoại suy dữ liệu và tính toán...' : '▶  Thực hiện dự đoán ngay'}
         </button>
       </section>
     </form>
